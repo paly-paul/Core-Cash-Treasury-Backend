@@ -46,9 +46,22 @@ class InProcessJobPublisher(JobPublisher):
 
                 mongo_db = get_mongo_db()
 
-                # Route by job type
+                # Route by job type — MVP: in-process dispatch to AI Backend
                 if envelope.job_type == JobType.CASH_POSITION:
-                    from ai_backend.app.worker.runner import run_agent_job
+                    # Dynamic import to avoid circular dependency
+                    # In production with SQS: replace this with queue handler
+                    try:
+                        from ai_backend.app.worker.runner import run_agent_job
+                    except ImportError:
+                        # Fallback: try adding ai-backend to path
+                        import sys
+                        import os
+                        ai_path = os.path.abspath(
+                            os.path.join(os.path.dirname(__file__), "../../../ai-backend")
+                        )
+                        if ai_path not in sys.path:
+                            sys.path.insert(0, ai_path)
+                        from app.worker.runner import run_agent_job
 
                     await run_agent_job(envelope=envelope, db=db, mongo_db=mongo_db)
 
