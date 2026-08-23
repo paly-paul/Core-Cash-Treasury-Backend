@@ -6,6 +6,8 @@ from .source_file import SourceFile
 from .statement import Statement
 from .transaction import Transaction
 from .users import Users
+from .ar_data import ARData
+from .ap_data import APData
 
 __all__ = [
     "Client",
@@ -16,4 +18,6 @@ __all__ = [
     "Statement",
     "Transaction",
     "SourceFile",
+    "ARData",
+    "APData",
 ]
