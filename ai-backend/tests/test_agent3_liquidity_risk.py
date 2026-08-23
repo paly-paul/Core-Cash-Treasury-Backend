@@ -68,8 +68,9 @@ class TestRiskScore:
         )
         # 3 breaches * 2 = 6, capped at 6
         assert result["score_breakdown"]["breach_points"] == 6
+        # Score = 1 (base) + 6 (breach) = 7, which is > 6 so "High"
         assert result["risk_score"] == 7
-        assert result["risk_level"] == "Medium"
+        assert result["risk_level"] == "High"
 
     def test_score_stale_feed_over_48h(self):
         """Score with stale feed > 48 hours."""
