@@ -16,6 +16,8 @@ from app.models.users import Users
 from app.models.account import Account
 from app.models.statement import Statement
 from app.models.fx_rates import FXRate
+from app.models.ar_data import ARData
+from app.models.source_file import SourceFile
 
 
 async def load_fixtures(db: AsyncSession):
@@ -215,5 +217,80 @@ async def load_fixtures(db: AsyncSession):
             entered_by=viewer_id,
         )
         db.add(fx)
+
+    await db.flush()
+
+    # Create source file for AR data
+    source_file = SourceFile(
+        client_id=client_id,
+        file_name="ar_fixture.csv",
+        file_type="csv",
+        upload_type="ar",
+        status="Processed",
+        rows_received=5,
+        rows_valid=5,
+        rows_failed=0,
+        user_id=viewer_id,
+    )
+    db.add(source_file)
+    await db.flush()
+
+    # Create AR data for concentration risk testing
+    # Top 3 share: (340k + 210k + 140k*1.27) / total ≈ 69% → just below 70% threshold
+    ar_fixtures = [
+        {
+            "counterparty_name": "Customer A",
+            "amount_local": Decimal("340000"),
+            "currency": "USD",
+            "amount_usd": Decimal("340000"),
+            "entity_id": entity_map["US HQ"],
+            "status": "Open",
+        },
+        {
+            "counterparty_name": "GlobalTech Ltd",
+            "amount_local": Decimal("210000"),
+            "currency": "USD",
+            "amount_usd": Decimal("210000"),
+            "entity_id": entity_map["US HQ"],
+            "status": "Open",
+        },
+        {
+            "counterparty_name": "Nordic AS",
+            "amount_local": Decimal("140000"),
+            "currency": "GBP",
+            "amount_usd": Decimal("177800"),  # 140000 * 1.27
+            "entity_id": entity_map["UK Operations"],
+            "status": "Overdue",
+        },
+        {
+            "counterparty_name": "Acme Corp",
+            "amount_local": Decimal("180000"),
+            "currency": "USD",
+            "amount_usd": Decimal("180000"),
+            "entity_id": entity_map["US HQ"],
+            "status": "Open",
+        },
+        {
+            "counterparty_name": "Beta GmbH",
+            "amount_local": Decimal("130000"),
+            "currency": "EUR",
+            "amount_usd": Decimal("141050"),  # 130000 * 1.085
+            "entity_id": entity_map["EU Entity"],
+            "status": "Open",
+        },
+    ]
+
+    for ar_spec in ar_fixtures:
+        ar = ARData(
+            client_id=client_id,
+            source_file_id=source_file.id,
+            counterparty_name=ar_spec["counterparty_name"],
+            currency=ar_spec["currency"],
+            amount_local=ar_spec["amount_local"],
+            amount_usd=ar_spec["amount_usd"],
+            entity_id=ar_spec["entity_id"],
+            status=ar_spec["status"],
+        )
+        db.add(ar)
 
     await db.commit()

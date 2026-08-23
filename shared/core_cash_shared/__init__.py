@@ -9,6 +9,7 @@ from .enums import (
 )
 from .error_codes import (
     ACCOUNT_RESTRICTED,
+    AGENT_ERROR,
     AUTH_PERMISSION_DENIED,
     AUTH_TOKEN_EXPIRED,
     AUTH_TOKEN_INVALID,
@@ -41,6 +42,7 @@ __all__ = [
     "RefreshFrequency",
     "RiskLevel",
     # Error codes
+    "AGENT_ERROR",
     "AUTH_TOKEN_MISSING",
     "AUTH_TOKEN_INVALID",
     "AUTH_TOKEN_EXPIRED",

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, AsyncSessionLocal
 from app.mongo.client import mongo_client
-from app.routes import health, accounts, entities, config, jobs, files
+from app.routes import health, accounts, entities, config, jobs, files, liquidity_risk
 from app.utils.fixtures import load_fixtures
 
 
@@ -64,3 +64,4 @@ app.include_router(entities.router)
 app.include_router(config.router)
 app.include_router(jobs.router)
 app.include_router(files.router)
+app.include_router(liquidity_risk.router)
