@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, verify_read_only
 from app.mongo.client import mongo_client
-from app.routes import health
+from app.routes import health, chat
 
 
 @asynccontextmanager
@@ -53,3 +53,4 @@ async def general_exception_handler(request, exc):
 
 
 app.include_router(health.router)
+app.include_router(chat.router, prefix="/chat", tags=["Chat"])
