@@ -3,9 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import engine
+from app.database import engine, AsyncSessionLocal
 from app.mongo.client import mongo_client
-from app.routes import health
+from app.routes import health, accounts, entities, config, jobs
+from app.utils.fixtures import load_fixtures
 
 
 @asynccontextmanager
@@ -21,6 +22,10 @@ async def lifespan(app: FastAPI):
         await mongo_client.connect()
     except Exception as e:
         raise RuntimeError(f"Failed to connect to MongoDB: {e}")
+
+    # Load fixtures
+    async with AsyncSessionLocal() as db:
+        await load_fixtures(db)
 
     yield
 
@@ -54,3 +59,7 @@ async def general_exception_handler(request, exc):
 
 
 app.include_router(health.router)
+app.include_router(accounts.router)
+app.include_router(entities.router)
+app.include_router(config.router)
+app.include_router(jobs.router)

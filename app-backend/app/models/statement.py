@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Numeric, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -14,5 +14,6 @@ class Statement(Base):
     available_balance = Column(Numeric(15, 2))
     currency = Column(String(3), nullable=False)
     source = Column(String(50))
+    ingested_at = Column(DateTime(timezone=True), server_default="now()", nullable=False)
 
     __table_args__ = (UniqueConstraint("account_id", "statement_date"),)

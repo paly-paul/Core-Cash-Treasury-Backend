@@ -22,6 +22,6 @@ class MongoClient:
 mongo_client = MongoClient()
 
 
-async def get_mongo_db():
-    """Dependency to get MongoDB database."""
+def get_mongo_db():
+    """Get MongoDB database."""
     return mongo_client.db

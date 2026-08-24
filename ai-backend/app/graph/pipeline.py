@@ -1,11 +1,7 @@
 from langgraph.graph import StateGraph
 
 from app.graph.state import AgentState
-
-
-async def run_agent_1_cash_position(state: AgentState) -> AgentState:
-    state["errors"]["agent_1"] = "NOT_IMPLEMENTED"
-    return state
+from app.agents.daily_cash_position import run_agent_1_cash_position
 
 
 async def run_agent_2_forecast(state: AgentState) -> AgentState:
