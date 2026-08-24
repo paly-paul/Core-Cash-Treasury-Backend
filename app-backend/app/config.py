@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     cognito_user_pool_id: str
     cognito_app_client_id: str
     anthropic_api_key: str
+    ai_backend_url: str = "http://localhost:8001"
 
     class Config:
         env_file = ".env"
