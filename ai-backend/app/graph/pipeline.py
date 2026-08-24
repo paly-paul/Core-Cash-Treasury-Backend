@@ -5,6 +5,8 @@ from app.agents.daily_cash_position import run_agent_1_cash_position
 from app.agents.liquidity_risk import run_agent_3_liquidity_risk
 from app.agents.action_recommendation import run_agent_4_recommendations
 from app.agents.policy_control import PolicyControlAgent, write_recommendations_to_mongo
+from app.agents.treasury_continuity import run_agent_7_continuity
+from app.agents.cfo_summary import run_agent_6_cfo_summary
 
 
 async def run_agent_2_forecast(state: AgentState) -> AgentState:
@@ -14,16 +16,6 @@ async def run_agent_2_forecast(state: AgentState) -> AgentState:
 
 async def run_agent_5_variance(state: AgentState) -> AgentState:
     state["errors"]["agent_5"] = "NOT_IMPLEMENTED"
-    return state
-
-
-async def run_agent_6_cfo_summary(state: AgentState) -> AgentState:
-    state["errors"]["agent_6"] = "NOT_IMPLEMENTED"
-    return state
-
-
-async def run_agent_7_continuity(state: AgentState) -> AgentState:
-    state["errors"]["agent_7"] = "NOT_IMPLEMENTED"
     return state
 
 
