@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, AsyncSessionLocal
 from app.mongo.client import mongo_client
 from app.routes import health, accounts, entities, config, jobs, files, liquidity_risk, audit, metadata
-from app.routers import recommendations
+from app.routers import recommendations, forecast
 from app.middleware.audit_middleware import AuditMiddleware
 from app.utils.fixtures import load_fixtures
 
@@ -71,3 +71,4 @@ app.include_router(liquidity_risk.router)
 app.include_router(audit.router)
 app.include_router(metadata.router)
 app.include_router(recommendations.router)
+app.include_router(forecast.router)
