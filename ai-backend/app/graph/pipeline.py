@@ -2,15 +2,11 @@ from langgraph.graph import StateGraph
 
 from app.graph.state import AgentState
 from app.agents.daily_cash_position import run_agent_1_cash_position
+from app.agents.liquidity_risk import run_agent_3_liquidity_risk
 
 
 async def run_agent_2_forecast(state: AgentState) -> AgentState:
     state["errors"]["agent_2"] = "NOT_IMPLEMENTED"
-    return state
-
-
-async def run_agent_3_liquidity_risk(state: AgentState) -> AgentState:
-    state["errors"]["agent_3"] = "NOT_IMPLEMENTED"
     return state
 
 

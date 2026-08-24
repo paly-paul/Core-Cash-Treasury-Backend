@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPAuthenticationError, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from app.auth.jwt import jwt_validator
 from app.auth.models import UserModel

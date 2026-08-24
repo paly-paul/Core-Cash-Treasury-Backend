@@ -1,10 +1,22 @@
 import asyncio
+import os
 from typing import AsyncGenerator
 from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+
+# Set environment variables before importing app config
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
+os.environ.setdefault("MONGODB_DB_NAME", "test-core-cash")
+os.environ.setdefault("SQS_QUEUE_URL", "http://localhost:9324/queue/test")
+os.environ.setdefault("AWS_REGION", "us-east-1")
+os.environ.setdefault("COGNITO_REGION", "us-east-1")
+os.environ.setdefault("COGNITO_USER_POOL_ID", "us-east-1_test123")
+os.environ.setdefault("COGNITO_APP_CLIENT_ID", "test-client-id")
+os.environ.setdefault("ANTHROPIC_API_KEY", "sk-test-key")
 
 from app.database import Base
 from app.models.client import Client
