@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: core-cash-ai-backend
+Version: 0.1.0
+Summary: Core Cash Agent AI Backend - LangGraph orchestration
+Requires-Python: >=3.11
+Requires-Dist: fastapi>=0.104
+Requires-Dist: uvicorn[standard]>=0.24
+Requires-Dist: sqlalchemy[asyncio]>=2.0
+Requires-Dist: asyncpg>=0.28
+Requires-Dist: motor>=3.3
+Requires-Dist: langgraph>=0.0.1
+Requires-Dist: langchain-core>=0.1
+Requires-Dist: pydantic-settings>=2.0
+Requires-Dist: anthropic>=0.7
+Requires-Dist: core-cash-shared @ file://../shared
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.21; extra == "dev"
