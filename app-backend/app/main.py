@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, AsyncSessionLocal
 from app.mongo.client import mongo_client
-from app.routes import health, accounts, entities, config, jobs, files, liquidity_risk
+from app.routes import health, accounts, entities, config, jobs, files, liquidity_risk, audit, metadata
+from app.middleware.audit_middleware import AuditMiddleware
 from app.utils.fixtures import load_fixtures
 
 
@@ -36,6 +37,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Core Cash App Backend", version="1.0.0", lifespan=lifespan)
 
+app.add_middleware(AuditMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -65,3 +67,5 @@ app.include_router(config.router)
 app.include_router(jobs.router)
 app.include_router(files.router)
 app.include_router(liquidity_risk.router)
+app.include_router(audit.router)
+app.include_router(metadata.router)

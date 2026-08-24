@@ -1,14 +1,22 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.auth.jwt import jwt_validator
 from app.auth.models import UserModel
+from app.database import get_db
+from app.models.users import Users
 from core_cash_shared import error_codes
 
 security = HTTPBearer()
 
 
-async def get_current_user(credentials=Depends(security)) -> UserModel:
+async def get_current_user(
+    credentials=Depends(security),
+    db: AsyncSession = Depends(get_db),
+) -> UserModel:
     """Extract and validate JWT token from Authorization header."""
     token = credentials.credentials
     try:
@@ -26,7 +34,14 @@ async def get_current_user(credentials=Depends(security)) -> UserModel:
     email = decoded.get("email", "")
     role = decoded.get("cognito:groups", ["Viewer"])[0] if decoded.get("cognito:groups") else "Viewer"
 
-    return UserModel(user_id=user_id, email=email, role=role)
+    stmt = select(Users).where(Users.cognito_sub == user_id)
+    result = await db.execute(stmt)
+    user_db = result.scalar()
+
+    if not user_db:
+        raise HTTPException(status_code=401, detail=error_codes.AUTH_TOKEN_INVALID)
+
+    return UserModel(user_id=str(user_db.id), client_id=user_db.client_id, email=email, role=role)
 
 
 def require_role(allowed_roles: list[str]):
