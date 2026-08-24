@@ -8,6 +8,8 @@ from .transaction import Transaction
 from .users import Users
 from .ar_data import ARData
 from .ap_data import APData
+from .audit_log import AuditLog
+from .investment import InvestmentPolicy, InvestmentCutoff
 
 __all__ = [
     "Client",
@@ -20,4 +22,7 @@ __all__ = [
     "SourceFile",
     "ARData",
     "APData",
+    "AuditLog",
+    "InvestmentPolicy",
+    "InvestmentCutoff",
 ]

@@ -3,15 +3,12 @@ from langgraph.graph import StateGraph
 from app.graph.state import AgentState
 from app.agents.daily_cash_position import run_agent_1_cash_position
 from app.agents.liquidity_risk import run_agent_3_liquidity_risk
+from app.agents.action_recommendation import run_agent_4_recommendations
+from app.agents.policy_control import PolicyControlAgent, write_recommendations_to_mongo
 
 
 async def run_agent_2_forecast(state: AgentState) -> AgentState:
     state["errors"]["agent_2"] = "NOT_IMPLEMENTED"
-    return state
-
-
-async def run_agent_4_recommendations(state: AgentState) -> AgentState:
-    state["errors"]["agent_4"] = "NOT_IMPLEMENTED"
     return state
 
 
@@ -31,8 +28,37 @@ async def run_agent_7_continuity(state: AgentState) -> AgentState:
 
 
 async def run_agent_8_policy_control(state: AgentState) -> AgentState:
-    state["errors"]["agent_8"] = "NOT_IMPLEMENTED"
-    return state
+    """Run Policy Control Agent — validates and filters recommendations."""
+    try:
+        from app.mongo.client import get_mongo_db
+
+        raw = state.get("action_recommendations", {}).get("raw", [])
+        agent = PolicyControlAgent()
+        approved, blocked = agent.run(raw)
+
+        # Write only approved recommendations to MongoDB
+        mongo = get_mongo_db()
+        result_id = await write_recommendations_to_mongo(
+            mongo_db=mongo,
+            client_id=state["client_id"],
+            job_id=state["job_id"],
+            approved_recs=approved,
+            blocked_recs=blocked,
+            agent1_run_id=state.get("cash_position", {}).get("_id", ""),
+            agent3_run_id=state.get("liquidity_risk", {}).get("_id", ""),
+        )
+
+        state["action_recommendations"] = {
+            "result_id": result_id,
+            "recommendation_count": len(approved),
+            "blocked_count": len(blocked),
+            "status": "completed",
+        }
+        return state
+
+    except Exception as e:
+        state["errors"]["agent_8"] = str(e)
+        return state
 
 
 def build_pipeline():
