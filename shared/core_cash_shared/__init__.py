@@ -4,6 +4,7 @@ from .enums import (
     DataConfidence,
     JobStatus,
     JobType,
+    Permission,
     RefreshFrequency,
     RiskLevel,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "DataConfidence",
     "JobStatus",
     "JobType",
+    "Permission",
     "RefreshFrequency",
     "RiskLevel",
     # Error codes

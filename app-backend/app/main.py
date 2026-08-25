@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, AsyncSessionLocal
 from app.mongo.client import mongo_client
-from app.routes import health, accounts, entities, config, jobs, files, liquidity_risk, audit, metadata
+from app.routes import health, accounts, entities, config, jobs, files, liquidity_risk, audit, metadata, auth, admin_users
 from app.routers import recommendations, forecast, cfo_summary, variance, chat_proxy
 from app.middleware.audit_middleware import AuditMiddleware
 from app.utils.fixtures import load_fixtures
@@ -62,6 +62,8 @@ async def general_exception_handler(request, exc):
 
 
 app.include_router(health.router)
+app.include_router(auth.router)
+app.include_router(admin_users.router)
 app.include_router(accounts.router)
 app.include_router(entities.router)
 app.include_router(config.router)
