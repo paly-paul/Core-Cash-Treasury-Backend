@@ -8,8 +8,9 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.audit_log import AuditLog
 
@@ -25,7 +26,7 @@ async def get_audit_log(
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.VIEW_AUDIT_LOG)),
 ) -> dict:
     """GET /api/audit-log - Get audit log entries for client."""
     stmt = select(AuditLog).where(AuditLog.client_id == current_user.client_id)
@@ -95,7 +96,7 @@ async def export_audit_log(
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.VIEW_AUDIT_LOG)),
 ):
     """GET /api/audit-log/export - Export audit log as CSV or PDF."""
     if format == "pdf":

@@ -8,8 +8,9 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.source_file import SourceFile
 from app.models.ar_data import ARData
@@ -47,9 +48,10 @@ async def upload_bank_balances(
     file: UploadFile = File(...),
     column_mapping: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
-    require_role(current_user, ["Analyst", "TreasuryManager", "CFO"])
+    if not current_user.has_permission(Permission.EDIT_ASSUMPTIONS):
+        raise HTTPException(status_code=403, detail={"code": "FORBIDDEN", "message": "Insufficient permissions"})
 
     client_id = current_user.client_id
     content = await file.read()
@@ -153,9 +155,10 @@ async def upload_ar(
     file: UploadFile = File(...),
     column_mapping: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
-    require_role(current_user, ["Analyst", "TreasuryManager", "CFO"])
+    if not current_user.has_permission(Permission.EDIT_ASSUMPTIONS):
+        raise HTTPException(status_code=403, detail={"code": "FORBIDDEN", "message": "Insufficient permissions"})
 
     client_id = current_user.client_id
     content = await file.read()
@@ -251,9 +254,10 @@ async def upload_ap(
     file: UploadFile = File(...),
     column_mapping: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
-    require_role(current_user, ["Analyst", "TreasuryManager", "CFO"])
+    if not current_user.has_permission(Permission.EDIT_ASSUMPTIONS):
+        raise HTTPException(status_code=403, detail={"code": "FORBIDDEN", "message": "Insufficient permissions"})
 
     client_id = current_user.client_id
     content = await file.read()
@@ -363,7 +367,7 @@ async def get_uploads(
     page_size: int = Query(20, ge=1, le=100),
     upload_type: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
     client_id = current_user.client_id
 
@@ -413,7 +417,7 @@ async def get_uploads(
 async def get_upload_status(
     upload_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
     client_id = current_user.client_id
 
@@ -450,9 +454,10 @@ async def get_upload_status(
 async def delete_upload(
     upload_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
-    require_role(current_user, ["TreasuryManager", "CFO"])
+    if not current_user.has_permission(Permission.EDIT_INVESTMENTS):
+        raise HTTPException(status_code=403, detail={"code": "FORBIDDEN", "message": "Insufficient permissions"})
 
     client_id = current_user.client_id
 

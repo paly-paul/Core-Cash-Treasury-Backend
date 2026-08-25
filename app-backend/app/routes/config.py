@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.fx_rates import FXRate
 from app.models.system_config import SystemConfig
@@ -25,7 +26,7 @@ VALID_CURRENCIES = {"GBP", "EUR"}
 @router.get("/api/config/fx-rates")
 async def get_fx_rates(
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """GET /api/config/fx-rates - Get FX rates for client."""
     today = date.today()
@@ -84,9 +85,7 @@ async def create_or_update_fx_rate(
     body: dict,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(
-        require_role(["Analyst", "TreasuryManager", "CFO"])
-    ),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """POST /api/config/fx-rates - Create or update FX rates."""
     from uuid import UUID as UUIDType
@@ -166,7 +165,7 @@ async def create_or_update_fx_rate(
 async def get_investment_policy(
     entity_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """GET /api/config/investment-policy - Get active investment policy."""
     from uuid import UUID as UUIDType
@@ -232,7 +231,7 @@ async def upload_investment_policy(
     file_content: str = Query(...),
     request: Request = None,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_INVESTMENTS)),
 ) -> dict:
     """POST /api/config/investment-policy - Upload investment policy."""
     from uuid import UUID as UUIDType
@@ -296,7 +295,7 @@ async def upload_investment_policy(
 @router.get("/api/config/investment-cutoffs")
 async def get_investment_cutoffs(
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """GET /api/config/investment-cutoffs - Get investment cutoffs."""
     stmt = select(InvestmentCutoff).where(
@@ -336,7 +335,7 @@ async def update_investment_cutoff(
     body: dict,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_SYSTEM_CONFIG)),
 ) -> dict:
     """PUT /api/config/investment-cutoffs/{entity_id} - Update investment cutoff."""
     from uuid import UUID as UUIDType
@@ -422,7 +421,7 @@ async def update_investment_cutoff(
 @router.get("/api/config/system")
 async def get_system_config(
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """GET /api/config/system - Get system config."""
     stmt = select(SystemConfig).where(
@@ -450,7 +449,7 @@ async def update_system_config(
     body: dict,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_SYSTEM_CONFIG)),
 ) -> dict:
     """PUT /api/config/system/{key} - Update system config."""
     from uuid import UUID as UUIDType

@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.account import Account
 from app.models.bank import Bank
@@ -54,7 +55,7 @@ async def list_accounts(
     entity_id: Optional[str] = Query(None),
     include_inactive: bool = Query(False),
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """GET /api/accounts - List accounts for current client."""
     stmt = select(Account).where(Account.client_id == current_user.client_id)
@@ -87,7 +88,7 @@ async def list_accounts(
 async def get_account(
     account_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """GET /api/accounts/{account_id} - Get single account."""
     stmt = select(Account).where(
@@ -113,7 +114,7 @@ async def get_account(
 async def create_account(
     body: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_INVESTMENTS)),
 ) -> dict:
     """POST /api/accounts - Create new account."""
     account = Account(
@@ -148,7 +149,7 @@ async def update_account(
     account_id: str,
     body: dict,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_INVESTMENTS)),
 ) -> dict:
     """PUT /api/accounts/{account_id} - Update account (patch semantics)."""
     stmt = select(Account).where(
