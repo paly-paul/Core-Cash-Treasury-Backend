@@ -6,14 +6,13 @@ from app.config import settings
 
 class JWTValidator:
     def __init__(self):
-        self.region = settings.cognito_region
-        self.user_pool_id = settings.cognito_user_pool_id
-        self.app_client_id = settings.cognito_app_client_id
+        self.public_key = settings.jwt_public_key
+        self.algorithm = settings.jwt_algorithm
 
     async def validate_token(self, token: str) -> Dict[str, Any]:
-        """Validate RS256 JWT from AWS Cognito.
+        """Validate RS256 JWT using the custom public key.
 
-        Returns decoded payload with user_id (sub), email, and role.
+        Returns decoded payload with user_id (sub), email, and permissions.
         Raises ValueError if validation fails.
         """
         if not token:
@@ -27,22 +26,13 @@ class JWTValidator:
         try:
             decoded = jwt.decode(
                 token,
-                key=self.app_client_id,
-                algorithms=["RS256"],
-                options={"verify_signature": False},
+                key=self.public_key,
+                algorithms=[self.algorithm],
             )
         except JWTError:
             raise ValueError("AUTH_TOKEN_INVALID")
 
-        now = datetime.utcnow().timestamp()
-        if decoded.get("exp", 0) < now:
-            raise ValueError("AUTH_TOKEN_EXPIRED")
-
-        iss = decoded.get("iss", "")
-        expected_iss = (
-            f"https://cognito-idp.{self.region}.amazonaws.com/{self.user_pool_id}"
-        )
-        if iss != expected_iss:
+        if decoded.get("type") != "access":
             raise ValueError("AUTH_TOKEN_INVALID")
 
         return decoded

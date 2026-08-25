@@ -7,10 +7,11 @@ class Settings(BaseSettings):
     mongodb_db_name: str
     anthropic_api_key: str
     aws_region: str
-    cognito_region: str
-    cognito_user_pool_id: str
-    cognito_app_client_id: str
     ai_backend_url: str = "http://localhost:8001"
+
+    # JWT settings for custom auth validation
+    jwt_public_key: str
+    jwt_algorithm: str = "RS256"
 
     class Config:
         env_file = ".env"
