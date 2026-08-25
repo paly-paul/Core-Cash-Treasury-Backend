@@ -37,3 +37,5 @@ node_modules/
 out/
 .env.local
 .env.*.local
+auth_private.pem
+auth_public.pem
