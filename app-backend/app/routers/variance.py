@@ -11,8 +11,9 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.job_status import JobStatus
 from app.mongo.client import get_mongo_db
@@ -33,9 +34,7 @@ class VarianceRequestBody(BaseModel):
 async def request_variance_explanation(
     body: VarianceRequestBody,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(
-        require_role(["Analyst", "TreasuryManager", "CFO"])
-    ),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Publish a variance explanation job to SQS/in-process queue.
@@ -110,9 +109,7 @@ async def request_variance_explanation(
 async def get_variance_explanation(
     variance_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(
-        require_role(["Viewer", "Analyst", "TreasuryManager", "CFO"])
-    ),
+    current_user: UserClaims = Depends(require_permission(Permission.VIEW_VARIANCE)),
 ) -> dict:
     """
     Poll for variance explanation result.
@@ -163,9 +160,7 @@ async def get_variance_explanation(
 async def get_current_variance_explanation(
     entity_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(
-        require_role(["Viewer", "Analyst", "TreasuryManager", "CFO"])
-    ),
+    current_user: UserClaims = Depends(require_permission(Permission.VIEW_VARIANCE)),
 ) -> dict:
     """
     Get latest variance explanation for an entity.

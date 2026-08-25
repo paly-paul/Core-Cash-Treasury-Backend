@@ -4,9 +4,10 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from uuid import uuid4
 
-from app.security import get_current_user, require_role
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
-from app.models.user import User
 from app.job_publisher import InProcessJobPublisher
 from app.mongo.client import get_mongo_db
 
@@ -16,7 +17,7 @@ briefing_router = APIRouter(prefix="/api/daily-briefing", tags=["daily-briefing"
 
 @router.post("/request")
 async def request_cfo_summary(
-    current_user: User = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.VIEW_CFO_SUMMARY)),
     db=Depends(get_db),
 ) -> Dict[str, Any]:
     """
@@ -50,7 +51,7 @@ async def request_cfo_summary(
 @router.get("/{summary_id}")
 async def get_cfo_summary(
     summary_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     GET /api/cfo-summary/{summary_id}
@@ -100,7 +101,7 @@ async def get_cfo_summary(
 
 @router.get("/latest")
 async def get_latest_cfo_summary(
-    current_user: User = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     GET /api/cfo-summary/latest
@@ -123,7 +124,7 @@ async def get_latest_cfo_summary(
 
 @router.get("/live-insights")
 async def get_live_insights(
-    current_user: User = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     GET /api/cfo-summary/live-insights
@@ -181,7 +182,7 @@ async def get_live_insights(
 
 @router.get("/export")
 async def export_cfo_summary(
-    current_user: User = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ):
     """
     GET /api/cfo-summary/export
@@ -196,7 +197,7 @@ async def export_cfo_summary(
 
 @briefing_router.post("/request")
 async def request_daily_briefing(
-    current_user: User = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.VIEW_CFO_SUMMARY)),
 ) -> Dict[str, Any]:
     """
     POST /api/daily-briefing/request
@@ -228,7 +229,7 @@ async def request_daily_briefing(
 
 @briefing_router.get("/latest")
 async def get_latest_daily_briefing(
-    current_user: User = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
     GET /api/daily-briefing/latest

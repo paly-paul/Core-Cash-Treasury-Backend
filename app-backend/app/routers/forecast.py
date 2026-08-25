@@ -12,8 +12,9 @@ from pydantic import BaseModel
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.manual_assumption import ManualAssumption
 from app.models.legal_entity import LegalEntity
@@ -152,7 +153,7 @@ async def publish_forecast_job(
 @router.get("/api/forecast/assumptions")
 async def get_assumptions(
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """
     Get all non-deleted manual assumptions for the client.
@@ -203,7 +204,7 @@ async def get_assumptions(
 async def create_assumption(
     body: AssumptionCreateBody,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Create a new manual assumption.
@@ -338,7 +339,7 @@ async def update_assumption(
     assumption_id: str,
     body: AssumptionUpdateBody,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Update an assumption.
@@ -492,7 +493,7 @@ async def update_assumption(
 async def delete_assumption(
     assumption_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Soft-delete an assumption (set deleted_at).
@@ -548,7 +549,7 @@ async def delete_assumption(
 async def request_forecast(
     body: ForecastRequestBody,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Publish a forecast job and return 202.
@@ -612,7 +613,7 @@ async def get_forecast_status(
     forecast_id: str,
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """
     Poll for forecast result.
@@ -694,7 +695,7 @@ async def get_forecast_status(
 async def get_current_forecast(
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """
     Returns the latest completed forecast for the client.
@@ -766,7 +767,7 @@ async def get_current_forecast(
 
 @router.get("/api/forecast/variance")
 async def get_forecast_variance(
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """
     Returns 503 — Variance depends on forecast, which is blocked.
@@ -785,7 +786,7 @@ async def get_forecast_variance(
 
 @router.post("/api/forecast/variance/request", status_code=503)
 async def request_forecast_variance(
-    current_user: UserModel = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Returns 503 — Variance depends on forecast, which is blocked.

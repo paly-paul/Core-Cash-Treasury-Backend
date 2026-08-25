@@ -11,8 +11,9 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_current_user, require_role
-from app.auth.models import UserModel
+from app.auth.dependencies import get_current_user, require_permission
+from core_cash_shared.schemas.auth import UserClaims
+from core_cash_shared.enums import Permission
 from app.database import get_db
 from app.models.job_status import JobStatus
 from app.mongo.client import get_mongo_db
@@ -64,7 +65,7 @@ class OverrideRequestBody(BaseModel):
 async def request_recommendation(
     body: RecommendationRequestBody,
     db: AsyncSession = Depends(get_db),
-    current_user: UserModel = Depends(require_role(["Analyst", "TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.EDIT_ASSUMPTIONS)),
 ) -> dict:
     """
     Publish a recommendation job to SQS/in-process queue.
@@ -129,7 +130,7 @@ async def get_recommendation_status(
     request_id: str,
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """
     Poll for recommendation result. Returns job status or full result with reasoning_trace.
@@ -211,7 +212,7 @@ async def list_recommendations(
     status: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(get_current_user),
+    current_user: UserClaims = Depends(get_current_user),
 ) -> dict:
     """
     List all recommendation runs for the client (paginated).
@@ -275,7 +276,7 @@ async def approve_recommendation_endpoint(
     body: ApproveRequestBody,
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.APPROVE_RECOMMENDATIONS)),
 ) -> dict:
     """
     Approve a recommendation item.
@@ -338,7 +339,7 @@ async def reject_recommendation_endpoint(
     body: RejectRequestBody,
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.APPROVE_RECOMMENDATIONS)),
 ) -> dict:
     """
     Reject a recommendation item.
@@ -400,7 +401,7 @@ async def override_recommendation_endpoint(
     body: OverrideRequestBody,
     db: AsyncSession = Depends(get_db),
     mongo_db=Depends(get_mongo_db),
-    current_user: UserModel = Depends(require_role(["TreasuryManager", "CFO"])),
+    current_user: UserClaims = Depends(require_permission(Permission.APPROVE_RECOMMENDATIONS)),
 ) -> dict:
     """
     Override a recommendation with manual action taken.
